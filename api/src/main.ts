@@ -6,7 +6,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: 'http://localhost:5173', // Allow only your frontend URL (e.g., React or Vue.js)
+    origin: '*', // Allow only your frontend URL (e.g., React or Vue.js)
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization', 'traceparent'], // Allow headers like Content-Type and Authorization
     credentials: true, // Allow credentials like cookies and authorization headers
