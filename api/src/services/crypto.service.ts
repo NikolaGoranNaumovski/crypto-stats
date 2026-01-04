@@ -127,18 +127,8 @@ export class CryptoService {
       latestOhlcvCandleData,
     );
 
-    if (cryptosWithNoOhlcv.length && false) {
-      await this.fetchAndSaveHistoricalDataForCryptoSymbols(cryptosWithNoOhlcv);
-      console.log({ cryptosWithNoOhlcv });
-      latestOhlcvCandleData = await this.ohlcvCandleRepository
-        .createQueryBuilder('oc')
-        .distinctOn(['oc.crypto_id'])
-        .where('oc.crypto_id IN (:...crypto_ids)', {
-          crypto_ids: cryptocurrenyIds,
-        })
-        .orderBy('oc.crypto_id', 'ASC')
-        .addOrderBy('oc.date', 'DESC')
-        .getMany();
+    if (cryptosWithNoOhlcv.length > 0) {
+      this.fetchAndSaveHistoricalDataForCryptoSymbols(cryptosWithNoOhlcv);
     }
 
     const data = cryptocurrencies.map((c) => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -12,7 +12,7 @@ import {
   Chip,
   ToggleButton,
   ToggleButtonGroup,
-} from '@mui/material';
+} from "@mui/material";
 import {
   LineChart,
   Line,
@@ -23,8 +23,8 @@ import {
   ResponsiveContainer,
   Legend,
   ReferenceLine,
-} from 'recharts';
-import { Brain, TrendingUp, Play, AlertCircle } from 'lucide-react';
+} from "recharts";
+import { Brain, TrendingUp, Play, AlertCircle } from "lucide-react";
 import {
   trainAndEvaluateLSTM,
   predictFuture,
@@ -32,23 +32,29 @@ import {
   type LSTMPrediction,
   type ModelMetrics,
   type PriceData,
-} from '../utils/lstm-model';
+} from "../utils/lstm-model";
 
 interface LSTMPredictionPanelProps {
   data: PriceData[];
   cryptoName: string;
 }
 
-type ViewMode = 'training' | 'validation' | 'all';
+type ViewMode = "training" | "validation" | "all";
 
-export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelProps) {
+export function LSTMPredictionPanel({
+  data,
+  cryptoName,
+}: LSTMPredictionPanelProps) {
   const [isTraining, setIsTraining] = useState(false);
-  const [trainingProgress, setTrainingProgress] = useState<TrainingProgress | null>(null);
+  const [trainingProgress, setTrainingProgress] =
+    useState<TrainingProgress | null>(null);
   const [predictions, setPredictions] = useState<LSTMPrediction[] | null>(null);
   const [metrics, setMetrics] = useState<ModelMetrics | null>(null);
   const [trainSize, setTrainSize] = useState<number>(0);
-  const [futurePredictions, setFuturePredictions] = useState<{ date: string; predicted: number }[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('all');
+  const [futurePredictions, setFuturePredictions] = useState<
+    { date: string; predicted: number }[]
+  >([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("all");
   const [lookback, setLookback] = useState<number>(30);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +63,7 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
       setIsTraining(true);
       setError(null);
       setTrainingProgress(null);
-      
+
       // Train model
       const result = await trainAndEvaluateLSTM(
         data,
@@ -68,28 +74,37 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           setTrainingProgress(progress);
         }
       );
-      
+
       setPredictions(result.predictions);
       setMetrics(result.metrics);
       setTrainSize(result.trainSize);
-      
+
       // Generate future predictions (7 days)
       if (result.model && result.scaler) {
-        const lastSequence = data
-          .slice(-lookback)
-          .map(d => {
-            const price = d.close || d.price;
-            return [(price - result.scaler.min) / (result.scaler.max - result.scaler.min)];
-          });
-        
-        const future = await predictFuture(result.model, lastSequence, 7, result.scaler);
-        
+        const lastSequence = data.slice(-lookback).map((d) => {
+          const price = d.close || d.price;
+          return [
+            (price - result.scaler.min) /
+              (result.scaler.max - result.scaler.min),
+          ];
+        });
+
+        const future = await predictFuture(
+          result.model,
+          lastSequence,
+          7,
+          result.scaler
+        );
+
         const futureDates = Array.from({ length: 7 }, (_, i) => {
           const date = new Date();
           date.setDate(date.getDate() + i + 1);
-          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
         });
-        
+
         setFuturePredictions(
           future.map((pred, idx) => ({
             date: futureDates[idx],
@@ -97,24 +112,24 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           }))
         );
       }
-      
+
       setIsTraining(false);
     } catch (err) {
-      console.error('Training error:', err);
-      setError('Failed to train model. Please try again.');
+      console.error("Training error:", err);
+      setError("Failed to train model. Please try again.");
       setIsTraining(false);
     }
   };
 
   const getChartData = () => {
     if (!predictions) return [];
-    
+
     switch (viewMode) {
-      case 'training':
+      case "training":
         return predictions.slice(0, trainSize);
-      case 'validation':
+      case "validation":
         return predictions.slice(trainSize);
-      case 'all':
+      case "all":
       default:
         return predictions;
     }
@@ -130,19 +145,19 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
     return (
       <Box
         sx={{
-          backgroundColor: 'rgba(10, 14, 39, 0.95)',
-          border: '1px solid #00ff41',
+          backgroundColor: "rgba(10, 14, 39, 0.95)",
+          border: "1px solid #00ff41",
           borderRadius: 1,
           p: 2,
-          boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)',
+          boxShadow: "0 0 20px rgba(0, 255, 65, 0.3)",
         }}
       >
         <Typography
           variant="caption"
           sx={{
-            color: '#00ff41',
-            fontFamily: 'monospace',
-            display: 'block',
+            color: "#00ff41",
+            fontFamily: "monospace",
+            display: "block",
             mb: 1,
           }}
         >
@@ -151,9 +166,9 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
         <Typography
           variant="caption"
           sx={{
-            color: '#00ff41',
-            fontFamily: 'monospace',
-            display: 'block',
+            color: "#00ff41",
+            fontFamily: "monospace",
+            display: "block",
           }}
         >
           Actual: ${data.actual?.toFixed(2)}
@@ -161,9 +176,9 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
         <Typography
           variant="caption"
           sx={{
-            color: '#42a5f5',
-            fontFamily: 'monospace',
-            display: 'block',
+            color: "#42a5f5",
+            fontFamily: "monospace",
+            display: "block",
           }}
         >
           Predicted: ${data.predicted?.toFixed(2)}
@@ -171,9 +186,9 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
         <Typography
           variant="caption"
           sx={{
-            color: '#ffa726',
-            fontFamily: 'monospace',
-            display: 'block',
+            color: "#ffa726",
+            fontFamily: "monospace",
+            display: "block",
           }}
         >
           Error: ${Math.abs(data.actual - data.predicted).toFixed(2)}
@@ -204,24 +219,24 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
     <Box>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Brain className="w-6 h-6" style={{ color: '#00ff41' }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Brain className="w-6 h-6" style={{ color: "#00ff41" }} />
           <Typography
             variant="h5"
             sx={{
-              color: '#00ff41',
-              fontFamily: 'monospace',
-              textShadow: '0 0 10px #00ff41',
+              color: "#00ff41",
+              fontFamily: "monospace",
+              textShadow: "0 0 10px #00ff41",
             }}
           >
-            {'>'}_ LSTM_PRICE_PREDICTION
+            {">"}_ LSTM_PRICE_PREDICTION
           </Typography>
         </Box>
         <Typography
           variant="body2"
           sx={{
-            color: '#00cc33',
-            fontFamily: 'monospace',
+            color: "#00cc33",
+            fontFamily: "monospace",
             mb: 2,
           }}
         >
@@ -229,12 +244,12 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
         </Typography>
 
         {/* Configuration */}
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
           <Typography
             variant="body2"
             sx={{
-              color: '#00cc33',
-              fontFamily: 'monospace',
+              color: "#00cc33",
+              fontFamily: "monospace",
             }}
           >
             LOOKBACK PERIOD:
@@ -245,21 +260,21 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             onChange={handleLookbackChange}
             disabled={isTraining}
             sx={{
-              '& .MuiToggleButton-root': {
-                color: '#00cc33',
-                borderColor: '#00ff41',
-                fontFamily: 'monospace',
+              "& .MuiToggleButton-root": {
+                color: "#00cc33",
+                borderColor: "#00ff41",
+                fontFamily: "monospace",
                 px: 2,
                 py: 0.5,
-                '&.Mui-selected': {
-                  backgroundColor: '#00ff41',
-                  color: '#0a0e27',
-                  '&:hover': {
-                    backgroundColor: '#00cc33',
+                "&.Mui-selected": {
+                  backgroundColor: "#00ff41",
+                  color: "#0a0e27",
+                  "&:hover": {
+                    backgroundColor: "#00cc33",
                   },
                 },
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                "&:hover": {
+                  backgroundColor: "rgba(0, 255, 65, 0.1)",
                 },
               },
             }}
@@ -277,20 +292,20 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           onClick={handleTrain}
           disabled
           sx={{
-            backgroundColor: '#00ff41',
-            color: '#0a0e27',
-            fontFamily: 'monospace',
-            '&:hover': {
-              backgroundColor: '#00cc33',
-              boxShadow: '0 0 20px rgba(0, 255, 65, 0.5)',
+            backgroundColor: "#00ff41",
+            color: "#0a0e27",
+            fontFamily: "monospace",
+            "&:hover": {
+              backgroundColor: "#00cc33",
+              boxShadow: "0 0 20px rgba(0, 255, 65, 0.5)",
             },
-            '&:disabled': {
-              backgroundColor: 'rgba(0, 255, 65, 0.3)',
-              color: 'rgba(10, 14, 39, 0.5)',
+            "&:disabled": {
+              backgroundColor: "rgba(0, 255, 65, 0.3)",
+              color: "rgba(10, 14, 39, 0.5)",
             },
           }}
         >
-          {isTraining ? 'TRAINING MODEL...' : 'TRAIN LSTM MODEL'}
+          {isTraining ? "TRAINING MODEL..." : "TRAIN LSTM MODEL"}
         </Button>
 
         {data.length < lookback + 20 && (
@@ -299,13 +314,14 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             icon={<AlertCircle className="w-4 h-4" />}
             sx={{
               mt: 2,
-              backgroundColor: 'rgba(255, 167, 38, 0.1)',
-              color: '#ffa726',
-              border: '1px solid #ffa726',
-              fontFamily: 'monospace',
+              backgroundColor: "rgba(255, 167, 38, 0.1)",
+              color: "#ffa726",
+              border: "1px solid #ffa726",
+              fontFamily: "monospace",
             }}
           >
-            Insufficient data for training. Need at least {lookback + 20} data points.
+            Insufficient data for training. Need at least {lookback + 20} data
+            points.
           </Alert>
         )}
       </Box>
@@ -314,9 +330,9 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
       {isTraining && trainingProgress && (
         <Paper
           sx={{
-            backgroundColor: '#0f172a',
-            border: '1px solid #00ff41',
-            boxShadow: '0 0 20px rgba(0, 255, 65, 0.2)',
+            backgroundColor: "#0f172a",
+            border: "1px solid #00ff41",
+            boxShadow: "0 0 20px rgba(0, 255, 65, 0.2)",
             p: 3,
             mb: 3,
           }}
@@ -324,8 +340,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           <Typography
             variant="body2"
             sx={{
-              color: '#00ff41',
-              fontFamily: 'monospace',
+              color: "#00ff41",
+              fontFamily: "monospace",
               mb: 2,
             }}
           >
@@ -337,20 +353,20 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             sx={{
               height: 10,
               borderRadius: 5,
-              backgroundColor: 'rgba(0, 255, 65, 0.1)',
-              '& .MuiLinearProgress-bar': {
-                backgroundColor: '#00ff41',
-                boxShadow: '0 0 10px #00ff41',
+              backgroundColor: "rgba(0, 255, 65, 0.1)",
+              "& .MuiLinearProgress-bar": {
+                backgroundColor: "#00ff41",
+                boxShadow: "0 0 10px #00ff41",
               },
               mb: 2,
             }}
           />
-          <Box sx={{ display: 'flex', gap: 3 }}>
+          <Box sx={{ display: "flex", gap: 3 }}>
             <Typography
               variant="caption"
               sx={{
-                color: '#00cc33',
-                fontFamily: 'monospace',
+                color: "#00cc33",
+                fontFamily: "monospace",
               }}
             >
               Training Loss: {trainingProgress.loss.toFixed(6)}
@@ -358,8 +374,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             <Typography
               variant="caption"
               sx={{
-                color: '#00cc33',
-                fontFamily: 'monospace',
+                color: "#00cc33",
+                fontFamily: "monospace",
               }}
             >
               Validation Loss: {trainingProgress.valLoss.toFixed(6)}
@@ -375,10 +391,10 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           icon={<AlertCircle className="w-4 h-4" />}
           sx={{
             mb: 3,
-            backgroundColor: 'rgba(255, 23, 68, 0.1)',
-            color: '#ff1744',
-            border: '1px solid #ff1744',
-            fontFamily: 'monospace',
+            backgroundColor: "rgba(255, 23, 68, 0.1)",
+            color: "#ff1744",
+            border: "1px solid #ff1744",
+            fontFamily: "monospace",
           }}
         >
           {error}
@@ -390,20 +406,20 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
         <>
           {/* Metrics Cards */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Box>
               <Card
                 sx={{
-                  backgroundColor: '#1a1f3a',
-                  border: '1px solid rgba(0, 255, 65, 0.3)',
-                  boxShadow: '0 0 10px rgba(0, 255, 65, 0.1)',
+                  backgroundColor: "#1a1f3a",
+                  border: "1px solid rgba(0, 255, 65, 0.3)",
+                  boxShadow: "0 0 10px rgba(0, 255, 65, 0.1)",
                 }}
               >
                 <CardContent>
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     RMSE
@@ -411,8 +427,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="h5"
                     sx={{
-                      color: '#00ff41',
-                      fontFamily: 'monospace',
+                      color: "#00ff41",
+                      fontFamily: "monospace",
                     }}
                   >
                     ${metrics.rmse.toFixed(2)}
@@ -420,30 +436,30 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     Root Mean Square Error
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Box>
               <Card
                 sx={{
-                  backgroundColor: '#1a1f3a',
-                  border: '1px solid rgba(0, 255, 65, 0.3)',
-                  boxShadow: '0 0 10px rgba(0, 255, 65, 0.1)',
+                  backgroundColor: "#1a1f3a",
+                  border: "1px solid rgba(0, 255, 65, 0.3)",
+                  boxShadow: "0 0 10px rgba(0, 255, 65, 0.1)",
                 }}
               >
                 <CardContent>
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     MAPE
@@ -451,8 +467,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="h5"
                     sx={{
-                      color: '#00ff41',
-                      fontFamily: 'monospace',
+                      color: "#00ff41",
+                      fontFamily: "monospace",
                     }}
                   >
                     {metrics.mape.toFixed(2)}%
@@ -460,30 +476,30 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     Mean Absolute % Error
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Box>
               <Card
                 sx={{
-                  backgroundColor: '#1a1f3a',
-                  border: '1px solid rgba(0, 255, 65, 0.3)',
-                  boxShadow: '0 0 10px rgba(0, 255, 65, 0.1)',
+                  backgroundColor: "#1a1f3a",
+                  border: "1px solid rgba(0, 255, 65, 0.3)",
+                  boxShadow: "0 0 10px rgba(0, 255, 65, 0.1)",
                 }}
               >
                 <CardContent>
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     R-SQUARED
@@ -491,8 +507,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="h5"
                     sx={{
-                      color: '#00ff41',
-                      fontFamily: 'monospace',
+                      color: "#00ff41",
+                      fontFamily: "monospace",
                     }}
                   >
                     {metrics.rSquared.toFixed(4)}
@@ -500,30 +516,30 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     Coefficient of Determination
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Box>
               <Card
                 sx={{
-                  backgroundColor: '#1a1f3a',
-                  border: '1px solid rgba(0, 255, 65, 0.3)',
-                  boxShadow: '0 0 10px rgba(0, 255, 65, 0.1)',
+                  backgroundColor: "#1a1f3a",
+                  border: "1px solid rgba(0, 255, 65, 0.3)",
+                  boxShadow: "0 0 10px rgba(0, 255, 65, 0.1)",
                 }}
               >
                 <CardContent>
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     ACCURACY
@@ -531,8 +547,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="h5"
                     sx={{
-                      color: '#00ff41',
-                      fontFamily: 'monospace',
+                      color: "#00ff41",
+                      fontFamily: "monospace",
                     }}
                   >
                     {(100 - metrics.mape).toFixed(2)}%
@@ -540,38 +556,38 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                   <Typography
                     variant="caption"
                     sx={{
-                      color: '#00cc33',
-                      fontFamily: 'monospace',
+                      color: "#00cc33",
+                      fontFamily: "monospace",
                     }}
                   >
                     Prediction Accuracy
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
           </Grid>
 
           {/* View Mode Toggle */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
             <ToggleButtonGroup
               value={viewMode}
               exclusive
               onChange={handleViewModeChange}
               sx={{
-                '& .MuiToggleButton-root': {
-                  color: '#00cc33',
-                  borderColor: '#00ff41',
-                  fontFamily: 'monospace',
+                "& .MuiToggleButton-root": {
+                  color: "#00cc33",
+                  borderColor: "#00ff41",
+                  fontFamily: "monospace",
                   px: 3,
-                  '&.Mui-selected': {
-                    backgroundColor: '#00ff41',
-                    color: '#0a0e27',
-                    '&:hover': {
-                      backgroundColor: '#00cc33',
+                  "&.Mui-selected": {
+                    backgroundColor: "#00ff41",
+                    color: "#0a0e27",
+                    "&:hover": {
+                      backgroundColor: "#00cc33",
                     },
                   },
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 255, 65, 0.1)",
                   },
                 },
               }}
@@ -585,9 +601,9 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           {/* Predictions Chart */}
           <Paper
             sx={{
-              backgroundColor: '#0f172a',
-              border: '1px solid #00ff41',
-              boxShadow: '0 0 20px rgba(0, 255, 65, 0.2)',
+              backgroundColor: "#0f172a",
+              border: "1px solid #00ff41",
+              boxShadow: "0 0 20px rgba(0, 255, 65, 0.2)",
               p: 3,
               mb: 3,
             }}
@@ -595,8 +611,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             <Typography
               variant="h6"
               sx={{
-                color: '#00ff41',
-                fontFamily: 'monospace',
+                color: "#00ff41",
+                fontFamily: "monospace",
                 mb: 2,
               }}
             >
@@ -604,32 +620,35 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             </Typography>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 255, 65, 0.1)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(0, 255, 65, 0.1)"
+                />
                 <XAxis
                   dataKey="date"
                   stroke="#00cc33"
-                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                  style={{ fontFamily: "monospace", fontSize: "12px" }}
                 />
                 <YAxis
                   stroke="#00cc33"
-                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                  style={{ fontFamily: "monospace", fontSize: "12px" }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
                   wrapperStyle={{
-                    fontFamily: 'monospace',
-                    color: '#00cc33',
+                    fontFamily: "monospace",
+                    color: "#00cc33",
                   }}
                 />
-                {viewMode === 'all' && trainSize > 0 && (
+                {viewMode === "all" && trainSize > 0 && (
                   <ReferenceLine
                     x={predictions[trainSize]?.date}
                     stroke="#ffa726"
                     strokeDasharray="5 5"
                     label={{
-                      value: 'Train/Val Split',
-                      fill: '#ffa726',
-                      fontFamily: 'monospace',
+                      value: "Train/Val Split",
+                      fill: "#ffa726",
+                      fontFamily: "monospace",
                     }}
                   />
                 )}
@@ -658,31 +677,33 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           {futurePredictions.length > 0 && (
             <Paper
               sx={{
-                backgroundColor: '#0f172a',
-                border: '2px solid #00ff41',
-                boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)',
+                backgroundColor: "#0f172a",
+                border: "2px solid #00ff41",
+                boxShadow: "0 0 20px rgba(0, 255, 65, 0.3)",
                 p: 3,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <TrendingUp className="w-5 h-5" style={{ color: '#00ff41' }} />
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+              >
+                <TrendingUp className="w-5 h-5" style={{ color: "#00ff41" }} />
                 <Typography
                   variant="h6"
                   sx={{
-                    color: '#00ff41',
-                    fontFamily: 'monospace',
+                    color: "#00ff41",
+                    fontFamily: "monospace",
                   }}
                 >
                   7-DAY FUTURE FORECAST
                 </Typography>
               </Box>
               <Grid container spacing={1}>
-                {futurePredictions.map((pred, idx) => (
-                  <Grid item xs={12} sm={6} md={3} key={idx}>
+                {futurePredictions.map((pred) => (
+                  <Box>
                     <Box
                       sx={{
-                        backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                        border: '1px solid rgba(0, 255, 65, 0.3)',
+                        backgroundColor: "rgba(0, 255, 65, 0.1)",
+                        border: "1px solid rgba(0, 255, 65, 0.3)",
                         borderRadius: 1,
                         p: 1.5,
                       }}
@@ -690,9 +711,9 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                       <Typography
                         variant="caption"
                         sx={{
-                          color: '#00cc33',
-                          fontFamily: 'monospace',
-                          display: 'block',
+                          color: "#00cc33",
+                          fontFamily: "monospace",
+                          display: "block",
                         }}
                       >
                         {pred.date}
@@ -700,14 +721,14 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
                       <Typography
                         variant="h6"
                         sx={{
-                          color: '#00ff41',
-                          fontFamily: 'monospace',
+                          color: "#00ff41",
+                          fontFamily: "monospace",
                         }}
                       >
                         ${pred.predicted.toFixed(2)}
                       </Typography>
                     </Box>
-                  </Grid>
+                  </Box>
                 ))}
               </Grid>
             </Paper>
@@ -716,8 +737,8 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
           {/* Model Info */}
           <Paper
             sx={{
-              backgroundColor: 'rgba(0, 255, 65, 0.05)',
-              border: '1px solid rgba(0, 255, 65, 0.2)',
+              backgroundColor: "rgba(0, 255, 65, 0.05)",
+              border: "1px solid rgba(0, 255, 65, 0.2)",
               p: 2,
               mt: 3,
             }}
@@ -725,63 +746,63 @@ export function LSTMPredictionPanel({ data, cryptoName }: LSTMPredictionPanelPro
             <Typography
               variant="caption"
               sx={{
-                color: '#00cc33',
-                fontFamily: 'monospace',
-                display: 'block',
+                color: "#00cc33",
+                fontFamily: "monospace",
+                display: "block",
                 mb: 1,
               }}
             >
               ℹ MODEL CONFIGURATION:
             </Typography>
             <Grid container spacing={1}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Box>
                 <Chip
                   label={`Lookback: ${lookback} days`}
                   size="small"
                   sx={{
-                    backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                    color: '#00cc33',
-                    border: '1px solid rgba(0, 255, 65, 0.3)',
-                    fontFamily: 'monospace',
+                    backgroundColor: "rgba(0, 255, 65, 0.1)",
+                    color: "#00cc33",
+                    border: "1px solid rgba(0, 255, 65, 0.3)",
+                    fontFamily: "monospace",
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box>
                 <Chip
                   label="LSTM Layers: 2"
                   size="small"
                   sx={{
-                    backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                    color: '#00cc33',
-                    border: '1px solid rgba(0, 255, 65, 0.3)',
-                    fontFamily: 'monospace',
+                    backgroundColor: "rgba(0, 255, 65, 0.1)",
+                    color: "#00cc33",
+                    border: "1px solid rgba(0, 255, 65, 0.3)",
+                    fontFamily: "monospace",
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box>
                 <Chip
                   label="Train Split: 70%"
                   size="small"
                   sx={{
-                    backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                    color: '#00cc33',
-                    border: '1px solid rgba(0, 255, 65, 0.3)',
-                    fontFamily: 'monospace',
+                    backgroundColor: "rgba(0, 255, 65, 0.1)",
+                    color: "#00cc33",
+                    border: "1px solid rgba(0, 255, 65, 0.3)",
+                    fontFamily: "monospace",
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box>
                 <Chip
                   label="Epochs: 50"
                   size="small"
                   sx={{
-                    backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                    color: '#00cc33',
-                    border: '1px solid rgba(0, 255, 65, 0.3)',
-                    fontFamily: 'monospace',
+                    backgroundColor: "rgba(0, 255, 65, 0.1)",
+                    color: "#00cc33",
+                    border: "1px solid rgba(0, 255, 65, 0.3)",
+                    fontFamily: "monospace",
                   }}
                 />
-              </Grid>
+              </Box>
             </Grid>
           </Paper>
         </>

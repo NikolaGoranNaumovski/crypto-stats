@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crypto_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./api
+    container_name: crypto_backend
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+
+  client:
+    build: ./client
+    container_name: crypto_client
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+# 👇 THIS WAS MISSING
+volumes:
+  postgres_data:

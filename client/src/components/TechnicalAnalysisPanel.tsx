@@ -346,9 +346,9 @@ export function TechnicalAnalysisPanel({
         </Box>
         <Grid container spacing={2}>
           {analysis.oscillators.map((indicator) => (
-            <Grid item xs={12} sm={6} md={4} key={indicator.name}>
+            <Box key={indicator.name}>
               {renderIndicator(indicator)}
-            </Grid>
+            </Box>
           ))}
         </Grid>
       </Box>
@@ -369,9 +369,9 @@ export function TechnicalAnalysisPanel({
         </Box>
         <Grid container spacing={2}>
           {analysis.movingAverages.map((indicator) => (
-            <Grid item xs={12} sm={6} md={4} key={indicator.name}>
+            <Box>
               {renderIndicator(indicator)}
-            </Grid>
+            </Box>
           ))}
         </Grid>
       </Box>
