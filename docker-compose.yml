@@ -36,6 +36,5 @@ services:
     ports:
       - "5173:80"
 
-# 👇 THIS WAS MISSING
 volumes:
   postgres_data:
